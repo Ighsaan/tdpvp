@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "TDPvP Client",
+  "version": "0.1.0",
+  "identifier": "com.tdpvp.client",
+  "build": {
+    "beforeDevCommand": "npm run dev:desktop:web",
+    "beforeBuildCommand": "npm run build:desktop:web",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "TDPvP Client",
+        "width": 1366,
+        "height": 768,
+        "minWidth": 1024,
+        "minHeight": 640,
+        "resizable": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": "v1Compatible",
+    "shortDescription": "Realtime PvP tower defence desktop client",
+    "category": "Game",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "dialog": false,
+      "endpoints": [
+        "https://github.com/ighsaanlevy/tdpvp/releases/latest/download/latest.json"
+      ],
+      "pubkey": "$TAURI_UPDATER_PUBLIC_KEY"
+    }
+  }
+}

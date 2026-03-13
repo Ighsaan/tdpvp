@@ -1,0 +1,11 @@
+export const LANE_SPACING = 8;
+export const WORLD_MARGIN = 8;
+
+export const DEFAULT_CAMERA_LOOK_AT_HEIGHT = 1.4;
+export const CAMERA_LERP_ALPHA = 0.09;
+export const UNIT_POSITION_INTERPOLATION_SPEED = 14;
+export const UNIT_POSITION_SNAP_DISTANCE = 18;
+
+export const BATTLEFIELD_BACKGROUND_COLOR = 0x2a3a4f;
+export const BATTLEFIELD_FOG_NEAR = 95;
+export const BATTLEFIELD_FOG_FAR = 240;

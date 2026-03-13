@@ -1,0 +1,19 @@
+{
+  "name": "tdpvp-project",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Realtime PvP side-scrolling tower defence monorepo foundation",
+  "scripts": {
+    "install:all": "npm install --prefix packages/shared && npm install --prefix apps/server && npm install --prefix apps/client",
+    "build:shared": "npm run build --prefix packages/shared",
+    "dev:server": "npm run build:shared && npm run dev --prefix apps/server",
+    "dev:client": "npm run build:shared && npm run dev --prefix apps/client",
+    "dev:client:desktop": "make dev-client-desktop",
+    "build:client:desktop": "make build-client-desktop",
+    "typecheck": "npm run build:shared && npm run typecheck --prefix apps/server && npm run typecheck --prefix apps/client && npm run typecheck --prefix packages/shared",
+    "build": "npm run build:shared && npm run build --prefix apps/server && npm run build --prefix apps/client"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
