@@ -58,19 +58,19 @@ jobs:
     runs-on: ubuntu-22.04
     environment: production
     steps:
-      - name: Validate workflow ref is a server release tag
+      - name: Validate workflow ref is main branch
         shell: bash
         run: |
-          if [[ "${GITHUB_REF}" != refs/tags/server-v* ]]; then
-            echo "Manual server deployment must be run from a server tag."
-            echo "Use GitHub Actions 'Use workflow from' and select a tag like server-v0.1.0."
+          if [[ "${GITHUB_REF}" != refs/heads/main ]]; then
+            echo "Manual server deployment must be run from main."
+            echo "Use GitHub Actions 'Use workflow from' and select the main branch."
             exit 1
           fi
 
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: refs/heads/main
           fetch-depth: 0
 
       - name: Set up Node.js
@@ -81,31 +81,6 @@ jobs:
           cache-dependency-path: |
             project/apps/server/package-lock.json
             project/packages/shared/package-lock.json
-
-      - name: Verify selected tag exists
-        env:
-          TAG_NAME: ${{ github.ref_name }}
-        shell: bash
-        run: |
-          git fetch --tags origin
-          if ! git rev-parse "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
-            echo "Tag ${TAG_NAME} does not exist on origin."
-            echo "Push to main first to run server tag preparation."
-            exit 1
-          fi
-
-      - name: Verify selected tag matches server package version
-        env:
-          TAG_NAME: ${{ github.ref_name }}
-        shell: bash
-        run: |
-          VERSION="$(node -p "require('./project/apps/server/package.json').version")"
-          EXPECTED_TAG="server-v${VERSION}"
-
-          if [ "${TAG_NAME}" != "${EXPECTED_TAG}" ]; then
-            echo "Selected tag ${TAG_NAME} does not match project/apps/server/package.json version (${EXPECTED_TAG})."
-            exit 1
-          fi
 
       - name: Validate Colyseus Cloud deployment prerequisites
         env:
@@ -145,4 +120,5 @@ jobs:
           colyseus-cloud deploy \
             --applicationId "${COLYSEUS_CLOUD_APPLICATION_ID}" \
             --token "${COLYSEUS_CLOUD_TOKEN}" \
+            --branch "main" \
             --env "production"

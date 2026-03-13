@@ -35,9 +35,9 @@ Create a dedicated server build/deploy workflow with environment-specific rollou
 - Added `/.github/workflows/server-colyseus-deploy.yml` with:
   - push-to-main server tag preparation (`server-vX.Y.Z`) from `project/apps/server/package.json`,
   - forced tag overwrite behavior for repeated pushes,
-  - manual Colyseus deploy job gated to `server-v*` workflow ref and production environment deployment.
+  - manual Colyseus deploy job gated to `main` workflow ref and production environment deployment.
 - Added explicit workflow checks for:
-  - selected tag existence and package-version/tag alignment,
+  - workflow ref targeting `main` for deploy,
   - required deployment secrets (`COLYSEUS_CLOUD_APPLICATION_ID`, `COLYSEUS_CLOUD_TOKEN`).
 - Added server deployment runbook and architecture cross-link for operator setup/usage.
 

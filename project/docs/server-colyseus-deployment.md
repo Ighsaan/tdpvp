@@ -13,8 +13,8 @@ Define the release tag and manual deployment workflow for `/project/apps/server`
 - Existing tag with the same name is overwritten on each push.
 
 2. Manual deployment (`workflow_dispatch`):
-- Must be run from a `server-v*` tag selected via GitHub Actions `Use workflow from`.
-- Verifies tag/version alignment and deploy prerequisites, then deploys to Colyseus Cloud `production`.
+- Must be run from `main` branch selected via GitHub Actions `Use workflow from`.
+- Verifies deploy prerequisites, then deploys `main` branch to Colyseus Cloud `production`.
 
 ## Required Repository Setup
 1. GitHub environment secrets:
@@ -30,11 +30,11 @@ Define the release tag and manual deployment workflow for `/project/apps/server`
 1. Bump server version in `project/apps/server/package.json` when needed.
 2. Push to `main` (updates `server-vX.Y.Z` tag to latest main commit).
 3. Open GitHub Actions and run `Server Colyseus Deployment`.
-4. In `Use workflow from`, choose the desired `server-vX.Y.Z` tag.
+4. In `Use workflow from`, choose `main`.
 5. Run workflow (it always deploys to `production` environment).
 6. Workflow builds shared/server packages and runs:
-   - `colyseus-cloud deploy --applicationId ... --token ... --env ...`
+   - `colyseus-cloud deploy --applicationId ... --token ... --branch main --env ...`
 
 ## Rollback Guidance
-- Re-run deployment from a previously known-good `server-v*` tag to the same environment.
+- Re-run deployment after resetting `main` to a known-good commit, then deploy again.
 - If using production environment protections, keep rollback deploy allowed for on-call/release maintainers.
