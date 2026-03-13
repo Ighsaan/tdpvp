@@ -76,8 +76,12 @@ Responsibilities:
 - publish updater metadata used by desktop clients.
 
 Trigger:
-- tag push matching `client-v*` (for example `client-v0.1.1`).
-- optional manual `workflow_dispatch`.
+- `prepare-release-tag` job runs on push to `main` only.
+- `release-client-desktop` job runs on manual `workflow_dispatch` only.
+- manual release requires `release_tag` input (for example `client-v0.1.0`).
+- tag preparation derives version from `/project/apps/client/src-tauri/Cargo.toml`.
+- push flow force-updates release tag (`client-vX.Y.Z`) to the latest `main` commit.
+- push flow deletes any existing GitHub Release for that tag before publishing fresh artifacts in later manual runs.
 
 ## Required GitHub Secrets and Variables
 Required for updater artifact signing and release publishing:
@@ -96,11 +100,13 @@ Optional platform-signing secrets (for production trust polish):
 Desktop updater version should align with client package and Tauri app version.
 
 Recommended patch release flow:
-1. Bump client version in `/project/apps/client/package.json` and `/project/apps/client/src-tauri/tauri.conf.json`.
+1. Bump client version in `/project/apps/client/src-tauri/Cargo.toml`, `/project/apps/client/package.json`, and `/project/apps/client/src-tauri/tauri.conf.json`.
 2. Commit version bump and related changelog/docs updates.
-3. Push a Git tag in format `client-vX.Y.Z`.
-4. GitHub Actions publishes desktop artifacts + updater metadata to the GitHub Release.
-5. Installed desktop clients detect and install the newer version on next startup check.
+3. Push to `main` to run tag preparation.
+4. Tag preparation force-updates `client-vX.Y.Z` from `project/apps/client/src-tauri/Cargo.toml`.
+5. Run the `Client Desktop Release` workflow manually with `release_tag=client-vX.Y.Z`.
+6. GitHub Actions publishes desktop artifacts + updater metadata to the GitHub Release.
+7. Installed desktop clients detect and install the newer version on next startup check.
 
 ## Safe Update Testing Strategy
 Use a two-release smoke test:

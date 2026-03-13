@@ -2,16 +2,102 @@ name: Client Desktop Release
 
 on:
   push:
-    tags:
-      - "client-v*"
+    branches:
+      - main
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to publish desktop artifacts for (for example client-v0.1.0)
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
+  prepare-release-tag:
+    name: Prepare Client Release Tag
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    outputs:
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Compute and create tag from client version
+        id: tag
+        shell: bash
+        run: |
+          VERSION="$(
+            awk -F'=' '
+              /^\[package\]/ { in_package=1; next }
+              /^\[/ && !/^\[package\]/ { in_package=0 }
+              in_package && $1 ~ /^[[:space:]]*version[[:space:]]*$/ {
+                value=$2
+                gsub(/["[:space:]]/, "", value)
+                print value
+                exit
+              }
+            ' ./project/apps/client/src-tauri/Cargo.toml
+          )"
+
+          if [ -z "${VERSION}" ]; then
+            echo "Failed to read package version from project/apps/client/src-tauri/Cargo.toml"
+            exit 1
+          fi
+
+          TAG_NAME="client-v${VERSION}"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Delete existing release for tag if present
+        uses: actions/github-script@v7
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+        with:
+          script: |
+            const tag = process.env.TAG_NAME;
+            try {
+              const existing = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag
+              });
+              await github.rest.repos.deleteRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: existing.data.id
+              });
+              core.info(`Deleted existing release for tag ${tag}.`);
+            } catch (error) {
+              if (error.status === 404) {
+                core.info(`No existing release found for tag ${tag}.`);
+                return;
+              }
+              throw error;
+            }
+
+      - name: Force-update tag on latest main commit
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -fa "${TAG_NAME}" -m "Desktop client release ${TAG_NAME}"
+          git push --force origin "refs/tags/${TAG_NAME}"
+
   release-client-desktop:
     name: Build and Publish Desktop Client (${{ matrix.platform }})
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -23,8 +109,28 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
+      - name: Validate provided release tag
+        id: tag
+        shell: bash
+        run: |
+          TAG_NAME="${{ github.event.inputs.release_tag }}"
+          if [[ -z "${TAG_NAME}" ]]; then
+            echo "release_tag input is required."
+            exit 1
+          fi
+
+          if [[ ! "${TAG_NAME}" =~ ^client-v[0-9A-Za-z._-]+$ ]]; then
+            echo "Invalid release_tag: ${TAG_NAME}. Expected format client-vX.Y.Z"
+            exit 1
+          fi
+
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ steps.tag.outputs.tag_name }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -34,6 +140,17 @@ jobs:
           cache-dependency-path: |
             project/apps/client/package-lock.json
             project/packages/shared/package-lock.json
+
+      - name: Verify tag exists
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+        shell: bash
+        run: |
+          git fetch --tags origin
+          if ! git rev-parse "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
+            echo "Tag ${TAG_NAME} does not exist yet. Push to main first to run prepare-release-tag."
+            exit 1
+          fi
 
       - name: Set up Rust toolchain (default)
         if: matrix.platform != 'macos-latest'
@@ -78,9 +195,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: project/apps/client
-          tagName: ${{ github.ref_name }}
-          releaseName: Desktop Client ${{ github.ref_name }}
-          releaseBody: Automated desktop client release artifacts for ${{ github.ref_name }}.
+          tagName: ${{ steps.tag.outputs.tag_name }}
+          releaseName: Desktop Client ${{ steps.tag.outputs.tag_name }}
+          releaseBody: Automated desktop client release artifacts for ${{ steps.tag.outputs.tag_name }}.
           releaseDraft: false
           prerelease: false
           uploadUpdaterJson: true
