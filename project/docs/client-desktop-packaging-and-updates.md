@@ -87,7 +87,7 @@ Trigger:
 Required for updater artifact signing and release publishing:
 - `TAURI_SIGNING_PRIVATE_KEY` (secret)
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (secret; empty string if key has no password)
-- `TAURI_UPDATER_PUBLIC_KEY` (secret used in build-time Tauri config substitution)
+- `TAURI_UPDATER_PUBLIC_KEY` (secret injected into `tauri.conf.json` during release workflow before build)
 
 Release publishing token:
 - built-in `GITHUB_TOKEN` (workflow permission `contents: write`).

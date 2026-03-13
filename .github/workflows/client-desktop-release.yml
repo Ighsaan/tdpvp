@@ -177,11 +177,36 @@ jobs:
       - name: Build shared package
         run: npm run build --prefix project/packages/shared
 
+      - name: Inject updater public key into Tauri config
+        shell: bash
+        env:
+          UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
+        run: |
+          if [ -z "${UPDATER_PUBLIC_KEY}" ]; then
+            echo "Missing required secret: TAURI_UPDATER_PUBLIC_KEY"
+            exit 1
+          fi
+
+          node <<'NODE'
+          const fs = require('fs');
+          const configPath = 'project/apps/client/src-tauri/tauri.conf.json';
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+          const key = (process.env.UPDATER_PUBLIC_KEY ?? '').trim();
+
+          if (key.length === 0 || key.startsWith('$')) {
+            throw new Error('TAURI_UPDATER_PUBLIC_KEY is empty or unresolved.');
+          }
+
+          config.plugins ??= {};
+          config.plugins.updater ??= {};
+          config.plugins.updater.pubkey = key;
+          fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+          NODE
+
       - name: Build and publish desktop release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
