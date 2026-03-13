@@ -44,7 +44,7 @@ If Rust is not installed, `make dev-client-desktop` and `make build-client-deskt
 
 ## Updater Source
 Updater endpoint uses GitHub Releases:
-- `https://github.com/ighsaanlevy/tdpvp/releases/latest/download/latest.json`
+- `https://github.com/Ighsaan/tdpvp/releases/latest/download/latest.json`
 
 The endpoint is consumed by the Tauri updater plugin configuration in:
 - `/project/apps/client/src-tauri/tauri.conf.json`

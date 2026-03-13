@@ -41,7 +41,7 @@
       "active": true,
       "dialog": false,
       "endpoints": [
-        "https://github.com/ighsaanlevy/tdpvp/releases/latest/download/latest.json"
+        "https://github.com/Ighsaan/tdpvp/releases/latest/download/latest.json"
       ],
       "pubkey": "$TAURI_UPDATER_PUBLIC_KEY"
     }
