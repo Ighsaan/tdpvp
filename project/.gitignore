@@ -4,3 +4,4 @@ dist/
 *.log
 apps/client/src-tauri/target/
 apps/client/src-tauri/gen/
+apps/server/.colyseus-cloud.json

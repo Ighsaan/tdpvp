@@ -11,6 +11,7 @@ The project consists of three collaborating systems:
 - Realtime server implementation: `/project/apps/server`
 - Shared client/server contracts: `/project/packages/shared`
 - Client desktop packaging and updater flow: `/project/docs/client-desktop-packaging-and-updates.md`
+- Server deployment runbook: `/project/docs/server-colyseus-deployment.md`
 - Implementation scaffold details: `/project/docs/implementation-foundation.md`
 - ThreeJS client rendering details: `/project/docs/client-3d-rendering.md`
 - React UI shell flow details: `/project/docs/react-ui-shell-flow.md`
