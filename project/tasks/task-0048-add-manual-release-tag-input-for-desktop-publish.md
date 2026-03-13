@@ -1,20 +1,20 @@
 # Title
-Add Manual Release Tag Input for Desktop Publish Job
+Drive Manual Desktop Publish Tag via Workflow Ref Selection
 
 ## Status
 Done
 
 ## Description
-Manual desktop publishing should target an explicitly selected release tag instead of inferring the tag inside the release job.
+Manual desktop publishing should target an explicitly selected release tag from workflow dispatch ref selection instead of inferring the tag inside the release job.
 
 ## Goal
-Require a `release_tag` workflow input for the manual release job and publish artifacts to that specific tag release.
+Require manual release runs to use a selected `client-v*` tag via the GitHub Actions `Use workflow from` selector and publish artifacts to that tag release.
 
 ## Acceptance Criteria
-- Workflow dispatch includes required `release_tag` input.
-- Manual `release-client-desktop` validates tag format.
-- Manual release checks out and publishes against the provided tag.
-- Documentation reflects the required manual tag input.
+- Manual `release-client-desktop` validates workflow ref is a `client-v*` tag.
+- Manual release checks out and publishes against the selected tag ref.
+- Workflow dispatch no longer requires a custom tag text input.
+- Documentation reflects tag selection from `Use workflow from`.
 
 ## Technical Notes
 - Tag-preparation push flow remains unchanged.
@@ -31,9 +31,9 @@ Require a `release_tag` workflow input for the manual release job and publish ar
 - Validate docs alignment with new dispatch contract.
 
 ## Validation Notes
-- Added required `workflow_dispatch.inputs.release_tag`.
-- Added manual release tag validation step and checkout ref binding.
-- Updated release documentation to require `release_tag` on manual publish.
+- Removed custom manual `release_tag` input from workflow dispatch.
+- Added manual release ref validation step for `refs/tags/client-v*`.
+- Updated release documentation to require selecting tag in `Use workflow from`.
 
 ## Delivered References
 - `/.github/workflows/client-desktop-release.yml`
