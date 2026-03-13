@@ -80,8 +80,8 @@ Trigger:
 - `release-client-desktop` job runs on manual `workflow_dispatch` only.
 - manual release must be started from a `client-v*` tag selected in GitHub Actions `Use workflow from`.
 - tag preparation derives version from `/project/apps/client/src-tauri/Cargo.toml`.
-- push flow force-updates release tag (`client-vX.Y.Z`) to the latest `main` commit.
-- push flow deletes any existing GitHub Release for that tag before publishing fresh artifacts in later manual runs.
+- push flow creates release tag (`client-vX.Y.Z`) only when it does not already exist.
+- if the tag already exists at a different commit, push flow fails and requires a version bump before retrying.
 
 ## Required GitHub Secrets and Variables
 Required for updater artifact signing and release publishing:
@@ -103,7 +103,7 @@ Recommended patch release flow:
 1. Bump client version in `/project/apps/client/src-tauri/Cargo.toml`, `/project/apps/client/package.json`, and `/project/apps/client/src-tauri/tauri.conf.json`.
 2. Commit version bump and related changelog/docs updates.
 3. Push to `main` to run tag preparation.
-4. Tag preparation force-updates `client-vX.Y.Z` from `project/apps/client/src-tauri/Cargo.toml`.
+4. Tag preparation creates `client-vX.Y.Z` from `project/apps/client/src-tauri/Cargo.toml` if the tag does not already exist.
 5. Run the `Client Desktop Release` workflow manually and choose `client-vX.Y.Z` in `Use workflow from`.
 6. GitHub Actions publishes desktop artifacts + updater metadata to the GitHub Release.
 7. Installed desktop clients detect and install the newer version on next startup check.

@@ -53,42 +53,33 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Delete existing release for tag if present
-        uses: actions/github-script@v7
-        env:
-          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
-        with:
-          script: |
-            const tag = process.env.TAG_NAME;
-            try {
-              const existing = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag
-              });
-              await github.rest.repos.deleteRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: existing.data.id
-              });
-              core.info(`Deleted existing release for tag ${tag}.`);
-            } catch (error) {
-              if (error.status === 404) {
-                core.info(`No existing release found for tag ${tag}.`);
-                return;
-              }
-              throw error;
-            }
-
-      - name: Force-update tag on latest main commit
+      - name: Create immutable release tag on latest main commit
         env:
           TAG_NAME: ${{ steps.tag.outputs.tag_name }}
         shell: bash
         run: |
+          HEAD_SHA="$(git rev-parse HEAD)"
+          REMOTE_SHA="$(git ls-remote --tags origin "refs/tags/${TAG_NAME}^{}" | awk '{print $1}' | head -n1)"
+
+          if [ -z "${REMOTE_SHA}" ]; then
+            REMOTE_SHA="$(git ls-remote --tags origin "refs/tags/${TAG_NAME}" | awk '{print $1}' | head -n1)"
+          fi
+
+          if [ -n "${REMOTE_SHA}" ]; then
+            if [ "${REMOTE_SHA}" != "${HEAD_SHA}" ]; then
+              echo "Tag ${TAG_NAME} already exists at ${REMOTE_SHA} and does not match main HEAD (${HEAD_SHA})."
+              echo "Bump client version in Cargo.toml/package.json/tauri.conf.json before pushing to main."
+              exit 1
+            fi
+
+            echo "Tag ${TAG_NAME} already exists on current commit. Skipping tag creation."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -fa "${TAG_NAME}" -m "Desktop client release ${TAG_NAME}"
-          git push --force origin "refs/tags/${TAG_NAME}"
+          git tag -a "${TAG_NAME}" -m "Desktop client release ${TAG_NAME}"
+          git push origin "refs/tags/${TAG_NAME}"
 
   release-client-desktop:
     name: Build and Publish Desktop Client (${{ matrix.platform }})
