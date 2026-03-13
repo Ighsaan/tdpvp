@@ -21,6 +21,21 @@ Define the manual deployment workflow for `/project/apps/server` so client appli
 2. Optional deployment approvals:
 - Configure GitHub Environment protection rules (required reviewers/wait timers) for `production` to gate manual promotion.
 
+3. Colyseus Cloud build settings (required for this monorepo):
+- Root Directory: `project/apps/server`
+- Build Command:
+  - `npm ci --prefix ../../packages/shared && npm run build --prefix ../../packages/shared && npm ci && npm run build`
+- Start Command:
+  - `npm start`
+- PM2 ecosystem file (required by Colyseus post-deploy):
+  - `project/apps/server/ecosystem.config.js`
+  - Must define a valid `script` entrypoint (`dist/index.js` in this project).
+
+If Root Directory is not `project/apps/server`, deploy may fail with:
+- `Could not read package.json: ... /home/deploy/source/package.json`
+If ecosystem config is missing or misconfigured, deploy may fail with:
+- `missing ecosystem config file. make sure to provide one with a valid "script" entrypoint file path.`
+
 ## Deployment Flow
 1. Push the desired server changes to `main`.
 2. Open GitHub Actions and run `Server Colyseus Deployment`.
