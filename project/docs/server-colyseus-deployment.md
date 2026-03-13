@@ -28,7 +28,7 @@ Define the manual deployment workflow for `/project/apps/server` so client appli
 - Start Command:
   - `npm start`
 - PM2 ecosystem file (required by Colyseus post-deploy):
-  - `project/apps/server/ecosystem.config.js`
+  - `project/apps/server/ecosystem.config.cjs`
   - Must define a valid `script` entrypoint (`dist/index.js` in this project).
 
 If Root Directory is not `project/apps/server`, deploy may fail with:
